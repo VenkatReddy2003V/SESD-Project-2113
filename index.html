@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FoodExpress - SESD Project</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f8f9fa}
+header{background:#ff4757;color:#fff;text-align:center;padding:16px}
+nav{background:#333;color:#fff;display:flex;justify-content:space-between;padding:10px}
+nav a{color:#fff;text-decoration:none;margin:0 10px}
+.container{padding:20px}
+.hidden{display:none}
+.restaurant{background:#fff;padding:12px;margin:10px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+.restaurant img{width:100%;border-radius:10px;height:160px;object-fit:cover}
+.menu-item{border-bottom:1px solid #eee;padding:8px 0;display:flex;justify-content:space-between;align-items:center}
+.menu-item button{background:#ff4757;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer}
+#loginForm,#signupForm{background:#fff;padding:20px;max-width:420px;margin:40px auto;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.15)}
+input{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:1px solid #ccc}
+button.primary{background:#ff4757;color:#fff;border:none;padding:10px;border-radius:6px;cursor:pointer;width:100%}
+footer{background:#333;color:#fff;text-align:center;padding:8px;position:fixed;bottom:0;width:100%}
+#restaurantList{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.cart{background:#fff;padding:15px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍔 FoodExpress</h1>
+  <p>Connecting Customers & Restaurants — SESD Project</p>
+</header>
+
+<nav>
+  <div>
+    <a href="#" onclick="showSection('restaurants')">Restaurants</a>
+    <a href="#" onclick="showSection('cart')">Cart</a>
+  </div>
+  <div id="userNav">
+    <a href="#" onclick="showSection('login')">Login</a>
+    <a href="#" onclick="showSection('signup')">Signup</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div id="login" class="hidden">
+    <h2>Login</h2>
+    <div id="loginForm">
+      <input id="loginEmail" placeholder="Email" />
+      <input id="loginPassword" type="password" placeholder="Password" />
+      <button class="primary" onclick="login()">Login</button>
+    </div>
+  </div>
+
+  <div id="signup" class="hidden">
+    <h2>Signup</h2>
+    <div id="signupForm">
+      <input id="signupName" placeholder="Full name" />
+      <input id="signupEmail" placeholder="Email" />
+      <input id="signupPassword" type="password" placeholder="Password" />
+      <button class="primary" onclick="signup()">Create account</button>
+    </div>
+  </div>
+
+  <div id="restaurants">
+    <h2>Available Restaurants (50)</h2>
+    <div id="restaurantList"></div>
+  </div>
+
+  <div id="cart" class="hidden">
+    <h2>🛒 Your Cart</h2>
+    <div id="cartItems" class="cart"></div>
+    <button class="primary" onclick="checkout()">Place Order</button>
+  </div>
+</div>
+
+<footer>© 2025 FoodExpress | SESD Project | Free Food Photos from Unsplash</footer>
+
+<script>
+// ✅ Stable direct food image URLs (Unsplash CDN – always loads)
+const foodImages = [
+  "https://images.unsplash.com/photo-1600891964599-f61ba0e24092",
+  "https://images.unsplash.com/photo-1551782450-a2132b4ba21d",
+  "https://images.unsplash.com/photo-1604147706283-d7119b5f7447",
+  "https://images.unsplash.com/photo-1604908177522-3c7e948b2771",
+  "https://images.unsplash.com/photo-1551218808-94e220e084d2",
+  "https://images.unsplash.com/photo-1565958011705-44e211f19e36",
+  "https://images.unsplash.com/photo-1598514983071-8ce5d002f2ac",
+  "https://images.unsplash.com/photo-1589307003873-90aaca3f0f7e",
+  "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
+  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+  "https://images.unsplash.com/photo-1529042410759-befb1204b468",
+  "https://images.unsplash.com/photo-1605478258784-5c3a1d84b31e",
+  "https://images.unsplash.com/photo-1565958011542-eda6a97b8e7d",
+  "https://images.unsplash.com/photo-1512058564366-18510be2db19",
+  "https://images.unsplash.com/photo-1594007654729-407eedc4be9b",
+  "https://images.unsplash.com/photo-1589923188900-9d6ef3b1f4d1",
+  "https://images.unsplash.com/photo-1568605114967-8130f3a36994",
+  "https://images.unsplash.com/photo-1601050690597-1ef9f9e0b6ee",
+  "https://images.unsplash.com/photo-1617196034796-66b504a7a27f",
+  "https://images.unsplash.com/photo-1625945279793-fb82f1f3568d",
+  "https://images.unsplash.com/photo-1603052875855-06a8871f9174",
+  "https://images.unsplash.com/photo-1550547660-d9450f859349",
+  "https://images.unsplash.com/photo-1605478258686-2ce0347e1e01",
+  "https://images.unsplash.com/photo-1601050690637-8a71e04edc7e",
+  "https://images.unsplash.com/photo-1586190848861-99aa4a171e90",
+  "https://images.unsplash.com/photo-1546069901-eacef0df6022",
+  "https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38",
+  "https://images.unsplash.com/photo-1572441710534-680b3e5a744b",
+  "https://images.unsplash.com/photo-1516685018646-549d8f1a0d4b",
+  "https://images.unsplash.com/photo-1572449043414-1fc2276f4d6f",
+  "https://images.unsplash.com/photo-1604908177522-3c7e948b2771",
+  "https://images.unsplash.com/photo-1625945279793-fb82f1f3568d",
+  "https://images.unsplash.com/photo-1571091718767-18b5b1457add",
+  "https://images.unsplash.com/photo-1613145993482-9b929d6d12b9",
+  "https://images.unsplash.com/photo-1586190848861-99aa4a171e90",
+  "https://images.unsplash.com/photo-1594007654729-407eedc4be9b",
+  "https://images.unsplash.com/photo-1565958011705-44e211f19e36",
+  "https://images.unsplash.com/photo-1589307003873-90aaca3f0f7e",
+  "https://images.unsplash.com/photo-1613145993482-9b929d6d12b9",
+  "https://images.unsplash.com/photo-1603052875855-06a8871f9174",
+  "https://images.unsplash.com/photo-1568605114967-8130f3a36994",
+  "https://images.unsplash.com/photo-1598514983071-8ce5d002f2ac",
+  "https://images.unsplash.com/photo-1600891964599-f61ba0e24092",
+  "https://images.unsplash.com/photo-1551782450-a2132b4ba21d",
+  "https://images.unsplash.com/photo-1604147706283-d7119b5f7447",
+  "https://images.unsplash.com/photo-1604908177522-3c7e948b2771",
+  "https://images.unsplash.com/photo-1551218808-94e220e084d2",
+  "https://images.unsplash.com/photo-1565958011705-44e211f19e36",
+  "https://images.unsplash.com/photo-1598514983071-8ce5d002f2ac",
+  "https://images.unsplash.com/photo-1589307003873-90aaca3f0f7e",
+  "https://images.unsplash.com/photo-1504674900247-0877df9cc836"
+];
+
+// Menus
+const sampleMenus = [
+  ["Margherita Pizza","Pepperoni Pizza","Garlic Bread","Choco Lava Cake"],
+  ["Paneer Butter Masala","Veg Biryani","Butter Naan","Gulab Jamun"],
+  ["Chicken Tikka","Mutton Biryani","Roti","Lassi"],
+  ["Cheeseburger","Fries","Onion Rings","Milkshake"],
+  ["Sushi Platter","Ramen","Tempura","Miso Soup"]
+];
+
+// Generate 50 restaurants
+const restaurants = [];
+for (let i = 1; i <= 50; i++) {
+  const menu = sampleMenus[i % sampleMenus.length].map((item, index) => ({
+    name: item,
+    price: 100 + (index + 1) * 40
+  }));
+  const img = foodImages[i - 1] + "?auto=format&fit=crop&w=400&q=80";
+  restaurants.push({ id: i, name: `Restaurant ${i}`, image: img, menu });
+}
+
+// Cart & user system
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
+
+function showSection(sectionId) {
+  document.querySelectorAll(".container > div").forEach(div => div.classList.add("hidden"));
+  document.getElementById(sectionId).classList.remove("hidden");
+  if (sectionId === "cart") renderCart();
+}
+
+function renderRestaurants() {
+  const container = document.getElementById("restaurantList");
+  container.innerHTML = "";
+  restaurants.forEach(r => {
+    const div = document.createElement("div");
+    div.className = "restaurant";
+    div.innerHTML = `
+      <h3>${r.name}</h3>
+      <img src="${r.image}" alt="${r.name}" onerror="this.src='https://images.unsplash.com/photo-1600891964599-f61ba0e24092'">
+      <h4>Menu</h4>
+      ${r.menu.map(m => `
+        <div class="menu-item">
+          <span>${m.name} - ₹${m.price}</span>
+          <button onclick="addToCart('${r.name}','${m.name}',${m.price})">Add</button>
+        </div>`).join("")}
+    `;
+    container.appendChild(div);
+  });
+}
+
+function addToCart(restaurant, item, price) {
+  if (!currentUser) return alert("Please login first!");
+  cart.push({ restaurant, item, price });
+  localStorage.setItem("cart", JSON.stringify(cart));
+  alert("Added to cart!");
+}
+
+function renderCart() {
+  const div = document.getElementById("cartItems");
+  div.innerHTML = "";
+  if (cart.length === 0) {
+    div.innerHTML = "<p>Your cart is empty.</p>";
+    return;
+  }
+  let total = 0;
+  cart.forEach((c, i) => {
+    total += c.price;
+    div.innerHTML += `<p>${c.item} (${c.restaurant}) - ₹${c.price} 
+    <button onclick="removeItem(${i})">Remove</button></p>`;
+  });
+  div.innerHTML += `<p><strong>Total: ₹${total}</strong></p>`;
+}
+
+function removeItem(index) {
+  cart.splice(index, 1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
+
+function checkout() {
+  if (cart.length === 0) return alert("Cart is empty!");
+  alert("✅ Order placed successfully!");
+  cart = [];
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
+
+// Signup/Login
+function signup() {
+  const name = document.getElementById("signupName").value.trim();
+  const email = document.getElementById("signupEmail").value.trim();
+  const pass = document.getElementById("signupPassword").value;
+  if (!name || !email || !pass) return alert("Please fill all fields!");
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  if (users.find(u => u.email === email)) return alert("User already exists!");
+  users.push({ name, email, password: pass });
+  localStorage.setItem("users", JSON.stringify(users));
+  alert("Signup successful! Please login.");
+  showSection("login");
+}
+
+function login() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPassword").value;
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  const user = users.find(u => u.email === email && u.password === pass);
+  if (!user) return alert("Invalid credentials!");
+  currentUser = user;
+  localStorage.setItem("currentUser", JSON.stringify(user));
+  document.getElementById("userNav").innerHTML =
+    `<span>Welcome, ${user.name}</span> <a href="#" onclick="logout()">Logout</a>`;
+  showSection("restaurants");
+}
+
+function logout() {
+  localStorage.removeItem("currentUser");
+  currentUser = null;
+  document.getElementById("userNav").innerHTML =
+    `<a href="#" onclick="showSection('login')">Login</a> <a href="#" onclick="showSection('signup')">Signup</a>`;
+  alert("Logged out successfully!");
+  showSection("restaurants");
+}
+
+// Initialize
+renderRestaurants();
+if (currentUser) {
+  document.getElementById("userNav").innerHTML =
+    `<span>Welcome, ${currentUser.name}</span> <a href="#" onclick="logout()">Logout</a>`;
+}
+</script>
+</body>
+</html>
